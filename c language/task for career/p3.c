@@ -1,30 +1,71 @@
-#include <stdio.h>
+#include<stdio.h>
 
-int main()
-{
-    int a;
-
-    printf(" 1.pizza \t\t price : 180 \n 2.burger \t\t price : 100 \n 3.dosa \t\t price : 120 \n 4.idli \t\t price : 50");
-
-    printf("\n\n\t enter what u want");
-
-    if (a == 1)
+int main(){
+    while (1)
     {
-        int quantity, b,total;
-        
-        printf("u selected pizaa");
+       
+    
+    int user,quantity,amount;
+    char n,y;
+    printf("1 Pizaa \t price = 180rs \n ");
+    printf("2 Burger \t price = 100rs \n ");
+    printf("3 Dosa \t price = 120rs \n");
+    printf("4 Idli \t\t price = 50rs \n ");
 
-        printf("enter quantity : ");
-        scanf("%d ", &quantity);
+    printf("enter what u want");
+     scanf("%d",&user);
 
-        b = quantity * 180;
-        printf("%d", &b);
+    if (user == 1)
+    {
+      printf("u have selected piza \n");
+      printf("enter quantity : ");
+      scanf("%d",&quantity);
+      amount = quantity * 180;
 
-       total = b ;
+      printf("amount is  : %d \n ",amount);
+      printf("total amount is : %d",amount);
 
-       printf("your total is : %d" , total);
-        
     }
 
+    if (user == 2)
+    {
+      printf("u have selected Burger \n");
+      printf("enter quantity : ");
+      scanf("%d",&quantity);
+      amount = quantity * 100;
+
+      printf("amount is  : %d \n",amount);
+      printf("total amount is : %d",amount);
+
+    }
+
+
+    if (user == 3)
+    {
+      printf("u have selected Dosa \n");
+      printf("enter quantity : ");
+      scanf("%d",&quantity);
+      amount = quantity * 120;
+
+      printf("amount is  : %d \n",amount);
+      printf("total amount is : %d",amount);
+
+    }
+
+
+    if (user == 4)
+    {
+      printf("u have selected idli \n");
+      printf("enter quantity : ");
+      scanf("%d",&quantity);
+      amount = quantity * 50;
+
+      printf("amount is  : %d \n",amount);
+      printf("total amount is : %d",amount);
+
+    }
+    
+    }
+    
     return 0;
 }
