@@ -30,12 +30,10 @@ class child : public subparent1, subparent2
 public:
     void display()
     {
-
         cout << "\n your c is" << c;
         cout << "\n your d is" << d;
     }
 };
-
 int main()
 {
     subparent2 s2 = subparent2();
