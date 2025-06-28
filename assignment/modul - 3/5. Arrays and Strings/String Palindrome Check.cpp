@@ -4,31 +4,31 @@ using namespace std;
 
 int main()
 {
-  char string[100],revstring[100];
-  int i , length = 0;
+  char string[100],rev[100];
+  int i , l = 0;
 
   cout<<"enter any string : ";
   cin>>string;
 
-  while (string[length] != '\0')
+  while (string[l] != '\0')
   {
-   length++;
+   l++;
   }
   
-  for ( i = 0; i < length; i++)
+  for ( i = 0; i < l; i++)
   {
-   revstring[i] = string[length - 1 - i];
+   rev[i] = string[l - 1 - i];
   }
 
-  revstring [length] = '\0';
+  rev [l] = '\0';
 
-  if (strcmp(string,revstring) == 0)
+  if (strcmp(string,rev) == 0)
   {
-   cout<<"the given string is palindrome ";
+   cout<<"it is palindrome ";
   }
   else
   {
-   cout<<"the given string is not palindrome ";
+   cout<<"it is not palindrome ";
   }
   return 0;
   
