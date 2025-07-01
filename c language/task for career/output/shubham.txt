@@ -1,0 +1,4 @@
+Player name: shubham
+Rounds: 2
+Final Score: shubham = 1, PC = 1
+Result: Draw
