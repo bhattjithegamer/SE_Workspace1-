@@ -6,11 +6,11 @@ add column- ALTER TABLE table_name ADD  name varchar(50) -> \\name is for column
 
 after add column - ALTER TABLE table_name ADD emp_no varchar(50) AFTER id; -> \\If you forget to add in between
 
-modify - ALTER TABLE customers MODIFY designation varchar(50) AFTER last_name; -> \\ exchange place
+modify - ALTER TABLE table_name MODIFY designation varchar(50) AFTER last_name; -> \\ exchange place
 
-rename - ALTER TABLE customers  RENAME customer -> \\ rename of table
+rename - ALTER TABLE table_name  RENAME customer -> \\ rename of table
 
-change - ALTER TABLE customer CHANGE salery1 salery varchar(50); -> rename of column
+change - ALTER TABLE table_name CHANGE salery1 salery varchar(50); -> rename of column
 
 drop - drop table tablename -> \\drop table
 
@@ -22,6 +22,6 @@ delete column - "ALTER TABLE `table_name` DROP `column name`;"   -> \\ use for d
 
 id - ALTER TABLE table_name ADD id int PRIMARY KEY AUTO_INCREMENT FIRST; -> \\If you forgot to put the id at the beginning
 
-UPDATE - UPDATE customer SET first_name = 'shubham'; -> \\ for UPDATE any data
+UPDATE - UPDATE table_name SET first_name = 'shubham'; -> \\ for UPDATE any data
 
 insert - insert into table_name (first_name) values ('shubham') -> \\ for insert data
