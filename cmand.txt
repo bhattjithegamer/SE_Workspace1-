@@ -1,24 +1,27 @@
-create database - create database emp ;
-create table - create table emp1(id int primary key auto increment);
+database - create database database_name ; -> \\for create database
 
-first add - alter TABLE table_name ADD name varchar(50)
-after add - ALTER TABLE table_name ADD emp_no varchar(50) AFTER id;
+table - create table table_name(id int primary key auto increment); -> \\for create table
 
-for change - ALTER table emp1 change name  first_name varchar(50)
-for add - ALTER TABLE emp1 ADD last_name varchar(50);
-for add - ALTER TABLE emp1 ADD first_name varchar(50);
-for add - ALTER TABLE emp1 ADD designation varchar(50);
-for add - ALTER TABLE emp1 ADD date varchar(50);
-for add - ALTER TABLE emp1 ADD salery varchar(50);
-for add - ALTER TABLE emp1 ADD comm varchar(50);
-for add - ALTER TABLE emp1 ADD deptno varchar(50);
+add column- ALTER TABLE table_name ADD  name varchar(50) -> \\name is for column and u can add column
 
-modify - ALTER TABLE customers MODIFY designation varchar(50) AFTER last_name;
-rename - ALTER TABLE customers  RENAME customer
-change - ALTER TABLE customer CHANGE salery1 salery varchar(50);
+after add column - ALTER TABLE table_name ADD emp_no varchar(50) AFTER id; -> \\If you forget to add in between
 
-for drop - drop table tablename 
-for delete data - truncat table table_name
-for delete row - delete from tablename where id  = __;
- for delete column - "ALTER TABLE `customer` DROP `column name`;"
-primary key and first - ALTER TABLE customer ADD id int PRIMARY KEY AUTO_INCREMENT FIRST; 
+modify - ALTER TABLE customers MODIFY designation varchar(50) AFTER last_name; -> \\ exchange place
+
+rename - ALTER TABLE customers  RENAME customer -> \\ rename of table
+
+change - ALTER TABLE customer CHANGE salery1 salery varchar(50); -> rename of column
+
+drop - drop table tablename -> \\drop table
+
+truncat - truncat table table_name -> \\ use for delete data
+
+delete row - delete from tablename where id  = __; -> \\ use for delete row
+
+delete column - "ALTER TABLE `table_name` DROP `column name`;"   -> \\ use for delete column
+
+id - ALTER TABLE table_name ADD id int PRIMARY KEY AUTO_INCREMENT FIRST; -> \\If you forgot to put the id at the beginning
+
+UPDATE - UPDATE customer SET first_name = 'shubham'; -> \\ for UPDATE any data
+
+insert - insert into table_name (first_name) values ('shubham') -> \\ for insert data
