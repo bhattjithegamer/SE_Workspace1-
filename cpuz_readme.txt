@@ -1,7 +1,9 @@
 create database - create database emp ;
 create table - create table emp1(id int primary key auto increment);
+
 first add - alter TABLE emp1 ADD name varchar(50)
 after add - ALTER TABLE emp1 add emp_no varchar(50) AFTER id;
+
 for change - ALTER table emp1 change name  first_name varchar(50)
 for add - ALTER TABLE emp1 ADD last_name varchar(50);
 for add - ALTER TABLE emp1 ADD first_name varchar(50);
@@ -10,3 +12,13 @@ for add - ALTER TABLE emp1 ADD date varchar(50);
 for add - ALTER TABLE emp1 ADD salery varchar(50);
 for add - ALTER TABLE emp1 ADD comm varchar(50);
 for add - ALTER TABLE emp1 ADD deptno varchar(50);
+
+modify - ALTER TABLE customers MODIFY designation varchar(50) AFTER last_name;
+rename - ALTER TABLE customers  RENAME customer
+change - ALTER TABLE customer CHANGE salery1 salery varchar(50);
+
+for drop - drop table tablename 
+for delete data - truncat table table_name
+for delete row - delete from tablename where id  = __;
+ for delete column - "ALTER TABLE `customer` DROP `column name`;"
+primary key and first - ALTER TABLE customer ADD id int PRIMARY KEY AUTO_INCREMENT FIRST; 
