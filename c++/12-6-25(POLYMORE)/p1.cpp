@@ -24,5 +24,8 @@ public:
 int main()
 {
     child c = child();
+     c.parent::add();
     c.add();
+
+   
 }

@@ -1,26 +1,29 @@
-#include<iostream>
+#include <iostream>
 using namespace std;
 
-class a5
+class parent
 {
-
 public:
-
-   int a1(int a , int b)
+    int display(int a, int b)
     {
-        return a + b;
+      return a + b;
     }
+};
+
+class child : public parent
+{
 public:
-   int a1(int a,int b,int c)
+    parent::display;
+    int display(int a, int b)
     {
-         return a * b * c;
+        
+        return a * b;
     }
 };
 
 int main()
 {
-    a5 a = a5();
-
-    cout<<a.a1(3,4)<<endl;
-    cout<<a.a1(5,6,2);
+    child c ;
+    cout << "first sum is : " << c.parent::display(5,5);
+    cout << "sec sum is : " << c.display(5,5);
 }
