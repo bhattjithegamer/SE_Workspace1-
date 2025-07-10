@@ -24,19 +24,9 @@
       left: 10px;
       z-index: 10;
       padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
       font-size: 14px;
-      border: 2px solid #333;
-      border-radius: 5px;
-      background-color: #f0f0f0;
-      cursor: pointer;
-    }
-
-    input {
-      background-color: white;
-    }
-
-    button:hover {
-      background-color: #e0e0e0;
     }
 
     #nameInput {
@@ -57,10 +47,10 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background-color: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.8);
       color: white;
       padding: 15px;
-      border-radius: 10px;
+      border-radius: 8px;
       min-width: 200px;
       z-index: 10;
     }
@@ -68,89 +58,105 @@
     #leaderboard h3 {
       margin: 0 0 10px 0;
       text-align: center;
-      font-size: 16px;
-      color: #ffdd44;
+      border-bottom: 1px solid #fff;
+      padding-bottom: 5px;
     }
 
     .leaderboard-entry {
       display: flex;
       justify-content: space-between;
       margin: 5px 0;
-      font-size: 14px;
+      padding: 3px 0;
     }
 
     .player-name {
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .player-score {
       font-weight: bold;
-      color: #44ff44;
     }
 
-    #gameStats {
-      position: fixed;
-      top: 10px;
-      right: 20px;
-      background-color: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      z-index: 10;
-      font-size: 14px;
+    .current-player {
+      color: #4CAF50;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  
-  <button id="startButton">Start</button>
-  <input type="text" id="nameInput" placeholder="Enter your name">
-  <button id="stopButton">Stop</button>
   <button id="restartButton">Restart</button>
-  
-  <div id="gameStats">
-    <div>Score: <span id="scoreDisplay">0</span></div>
-    <div>Mass: <span id="massDisplay">0</span></div>
-  </div>
+  <canvas id="gameCanvas"></canvas>
+  <input type="text" id="nameInput" placeholder="Enter your name">
+  <button id="startButton">Start</button>
+  <button id="stopButton">Stop</button>
   
   <div id="leaderboard">
     <h3>🏆 Leaderboard</h3>
-    <div id="leaderboardContent"></div>
+    <div id="leaderboard-list"></div>
   </div>
-  
-  <canvas id="gameCanvas"></canvas>
-  
+
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    const gameWidth = 10000;
-    const gameHeight = 10000;
+         const gameWidth = 8000;
+     const gameHeight = 8000;
+     
+     // Audio context for sound effects
+     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+     
+     // Function to play eating sound
+     function playEatSound() {
+       const oscillator = audioContext.createOscillator();
+       const gainNode = audioContext.createGain();
+       
+       oscillator.connect(gainNode);
+       gainNode.connect(audioContext.destination);
+       
+       oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+       oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+       
+       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+       
+       oscillator.start(audioContext.currentTime);
+       oscillator.stop(audioContext.currentTime + 0.1);
+     }
+     
+     // Game state
+     let gameRunning = false;
+     let gameLoopId = null;
+     let mouseX = 0;
+     let mouseY = 0;
 
+    // Player object
     let player = {
       x: gameWidth / 2,
       y: gameHeight / 2,
       radius: 20,
-      color: 'blue',
-      speed: 5,
-      name: '',
-      score: 0,
+      color: '#4CAF50',
+      speed: 3,
+      name: 'You',
+      id: 'player',
       isPlayer: true
     };
 
-    let allPlayers = []; // Will include both human player and AI players
-    let playerPieces = [player];
+    // Game objects
+    let allPlayers = [player];
     let food = [];
-    let mouseX = canvas.width / 2;
-    let mouseY = canvas.height / 2;
+    let bots = [];
 
-    let gameRunning = false;
-    let gameLoopId = null;
+    // Bot names for variety
+    const botNames = [
+      'AlphaBot', 'BetaBot', 'GammaBot', 'DeltaBot', 'EpsilonBot',
+      'ZetaBot', 'EtaBot', 'ThetaBot', 'IotaBot', 'KappaBot',
+      'LambdaBot', 'MuBot', 'NuBot', 'XiBot', 'OmicronBot',
+      'PiBot', 'RhoBot', 'SigmaBot', 'TauBot', 'UpsilonBot'
+    ];
 
-    // Set the canvas to fullscreen
+    // Set canvas to fullscreen
     function setCanvasFullscreen() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -159,103 +165,172 @@
     setCanvasFullscreen();
     window.addEventListener('resize', setCanvasFullscreen);
 
-    // Generate AI players
-    function generateAIPlayers() {
-      const aiNames = ['Bot Alpha', 'Bot Beta', 'Bot Gamma', 'Bot Delta', 'Bot Epsilon', 'Bot Zeta', 'Bot Eta', 'Bot Theta'];
-      const colors = ['red', 'green', 'purple', 'orange', 'pink', 'cyan', 'yellow', 'brown'];
-      
-      for (let i = 0; i < 8; i++) {
-        let aiPlayer = {
+    // Generate random color
+    function getRandomColor() {
+      const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+        '#DDA0DD', '#FF7F50', '#87CEEB', '#98D8C8', '#F7DC6F'
+      ];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // Create bot players
+    function createBots(count) {
+      bots = [];
+      for (let i = 0; i < count; i++) {
+        const bot = {
           x: Math.random() * (gameWidth - 100) + 50,
           y: Math.random() * (gameHeight - 100) + 50,
-          radius: Math.random() * 30 + 15,
-          color: colors[i],
-          speed: Math.random() * 3 + 2,
-          name: aiNames[i],
-          score: Math.floor(Math.random() * 100),
+          radius: Math.random() * 15 + 15,
+          color: getRandomColor(),
+          speed: Math.random() * 2 + 1.5,
+          name: botNames[i % botNames.length],
+          id: 'bot_' + i,
+          targetX: 0,
+          targetY: 0,
           isPlayer: false,
-          targetX: Math.random() * gameWidth,
-          targetY: Math.random() * gameHeight,
-          lastDirectionChange: 0
+          lastTargetUpdate: 0
         };
-        allPlayers.push(aiPlayer);
+        bots.push(bot);
+        allPlayers.push(bot);
       }
     }
 
-    function drawGrid() {
-      const gridSize = 50;
-      ctx.strokeStyle = '#ddd';
-      ctx.lineWidth = 1;
+    // Update bot AI
+    function updateBots() {
+      const now = Date.now();
+      
+      bots.forEach(bot => {
+        // Update target every 2 seconds or when reached current target
+        if (now - bot.lastTargetUpdate > 2000 || 
+            Math.abs(bot.x - bot.targetX) < 50 && Math.abs(bot.y - bot.targetY) < 50) {
+          
+          // Find nearest food or move randomly
+          let nearestFood = null;
+          let minDistance = Infinity;
+          
+          food.forEach(f => {
+            const dist = Math.sqrt((bot.x - f.x) ** 2 + (bot.y - f.y) ** 2);
+            if (dist < minDistance && dist < 200) {
+              minDistance = dist;
+              nearestFood = f;
+            }
+          });
 
-      // Calculate zoom factor based on the player's size
-      let zoomFactor = Math.max(0.5, Math.min(2, 30 / player.radius));
+          if (nearestFood) {
+            bot.targetX = nearestFood.x;
+            bot.targetY = nearestFood.y;
+          } else {
+            // Move to random position
+            bot.targetX = Math.random() * gameWidth;
+            bot.targetY = Math.random() * gameHeight;
+          }
+          
+          bot.lastTargetUpdate = now;
+        }
 
-      for (let x = 0; x <= gameWidth; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, gameHeight);
-        ctx.stroke();
-      }
-
-      for (let y = 0; y <= gameHeight; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(gameWidth, y);
-        ctx.stroke();
-      }
-    }
-
-    function drawPlayer() {
-      // Draw player pieces
-      playerPieces.forEach(piece => {
-        ctx.beginPath();
-        ctx.arc(piece.x, piece.y, piece.radius, 0, Math.PI * 2);
-        ctx.fillStyle = piece.color;
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.closePath();
-
-        // Draw the player's name
-        if (piece.name) {
-          ctx.fillStyle = 'white';
-          ctx.font = `${Math.max(12, piece.radius / 3)}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.strokeStyle = 'black';
-          ctx.lineWidth = 1;
-          ctx.strokeText(piece.name, piece.x, piece.y);
-          ctx.fillText(piece.name, piece.x, piece.y);
+        // Move towards target
+        const dx = bot.targetX - bot.x;
+        const dy = bot.targetY - bot.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 5) {
+          const moveX = (dx / distance) * bot.speed;
+          const moveY = (dy / distance) * bot.speed;
+          
+          bot.x = Math.max(bot.radius, Math.min(bot.x + moveX, gameWidth - bot.radius));
+          bot.y = Math.max(bot.radius, Math.min(bot.y + moveY, gameHeight - bot.radius));
         }
       });
     }
 
-    function drawAIPlayers() {
-      allPlayers.forEach(aiPlayer => {
-        ctx.beginPath();
-        ctx.arc(aiPlayer.x, aiPlayer.y, aiPlayer.radius, 0, Math.PI * 2);
-        ctx.fillStyle = aiPlayer.color;
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.closePath();
+    // Draw grid
+    function drawGrid() {
+      const gridSize = 50;
+      ctx.strokeStyle = '#E0E0E0';
+      ctx.lineWidth = 1;
 
-        // Draw AI player name
-        ctx.fillStyle = 'white';
-        ctx.font = `${Math.max(10, aiPlayer.radius / 3)}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 1;
-        ctx.strokeText(aiPlayer.name, aiPlayer.x, aiPlayer.y);
-        ctx.fillText(aiPlayer.name, aiPlayer.x, aiPlayer.y);
+      // Calculate visible grid lines based on viewport
+      const viewportWidth = canvas.width / getZoomFactor();
+      const viewportHeight = canvas.height / getZoomFactor();
+      const viewportX = getViewportX();
+      const viewportY = getViewportY();
+
+      const startX = Math.floor(viewportX / gridSize) * gridSize;
+      const endX = Math.ceil((viewportX + viewportWidth) / gridSize) * gridSize;
+      const startY = Math.floor(viewportY / gridSize) * gridSize;
+      const endY = Math.ceil((viewportY + viewportHeight) / gridSize) * gridSize;
+
+      for (let x = startX; x <= endX; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, startY);
+        ctx.lineTo(x, endY);
+        ctx.stroke();
+      }
+
+      for (let y = startY; y <= endY; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y);
+        ctx.stroke();
+      }
+    }
+
+    // Get zoom factor based on player size
+    function getZoomFactor() {
+      return Math.max(0.5, Math.min(2, 30 / player.radius));
+    }
+
+    // Get viewport position
+    function getViewportX() {
+      const zoomFactor = getZoomFactor();
+      const viewportWidth = canvas.width / zoomFactor;
+      return Math.max(0, Math.min(player.x - viewportWidth / 2, gameWidth - viewportWidth));
+    }
+
+    function getViewportY() {
+      const zoomFactor = getZoomFactor();
+      const viewportHeight = canvas.height / zoomFactor;
+      return Math.max(0, Math.min(player.y - viewportHeight / 2, gameHeight - viewportHeight));
+    }
+
+    // Draw all players
+    function drawPlayers() {
+      allPlayers.forEach(p => {
+        if (p.radius > 0) {
+          // Draw player circle
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+          
+          // Add border for player
+          if (p.isPlayer) {
+            ctx.strokeStyle = '#2E7D32';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          }
+          
+          ctx.closePath();
+
+          // Draw name
+          if (p.name && p.radius > 15) {
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.font = `${Math.max(12, p.radius / 3)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(p.name, p.x, p.y);
+            ctx.fillText(p.name, p.x, p.y);
+          }
+        }
       });
     }
 
+    // Draw food
     function drawFood() {
-      food.forEach((item) => {
+      food.forEach(item => {
         ctx.beginPath();
         ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
         ctx.fillStyle = item.color;
@@ -264,186 +339,170 @@
       });
     }
 
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function updateAIPlayers() {
-      allPlayers.forEach(aiPlayer => {
-        // Simple AI movement
-        if (Date.now() - aiPlayer.lastDirectionChange > 2000) {
-          aiPlayer.targetX = Math.random() * gameWidth;
-          aiPlayer.targetY = Math.random() * gameHeight;
-          aiPlayer.lastDirectionChange = Date.now();
-        }
-
-        let dx = aiPlayer.targetX - aiPlayer.x;
-        let dy = aiPlayer.targetY - aiPlayer.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance > 10) {
-          let moveX = (dx / distance) * aiPlayer.speed;
-          let moveY = (dy / distance) * aiPlayer.speed;
-          
-          aiPlayer.x = Math.max(aiPlayer.radius, Math.min(aiPlayer.x + moveX, gameWidth - aiPlayer.radius));
-          aiPlayer.y = Math.max(aiPlayer.radius, Math.min(aiPlayer.y + moveY, gameHeight - aiPlayer.radius));
-        }
-
-        // AI eats food
-        food.forEach((item, index) => {
-          let dx = aiPlayer.x - item.x;
-          let dy = aiPlayer.y - item.y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < aiPlayer.radius + item.radius) {
-            food.splice(index, 1);
-            aiPlayer.radius += item.radius / 10;
-            aiPlayer.score += 1;
-          }
-        });
-      });
-    }
-
-    function updateLeaderboard() {
-      // Combine player and AI scores
-      let allPlayersData = [];
-      
-      // Add human player
-      if (player.name) {
-        allPlayersData.push({
-          name: player.name,
-          score: player.score,
-          isHuman: true
+    // Generate food
+    function generateFood() {
+      while (food.length < 1000) {
+        food.push({
+          x: Math.random() * gameWidth,
+          y: Math.random() * gameHeight,
+          radius: Math.random() * 4 + 3,
+          color: getRandomColor()
         });
       }
+    }
+
+         // Check collisions
+     function checkCollisions() {
+       // Food collision
+       for (let i = food.length - 1; i >= 0; i--) {
+         const item = food[i];
+         let foodEaten = false;
+         
+         for (let j = 0; j < allPlayers.length && !foodEaten; j++) {
+           const p = allPlayers[j];
+           if (p.radius > 0) {
+             const dx = p.x - item.x;
+             const dy = p.y - item.y;
+             const distance = Math.sqrt(dx * dx + dy * dy);
+
+                           if (distance < p.radius) {
+                food.splice(i, 1);
+                p.radius += item.radius * 0.3;
+                if (p.isPlayer) {
+                  try {
+                    playEatSound();
+                  } catch (e) {
+                    // Audio might not be available
+                  }
+                }
+                foodEaten = true;
+              }
+           }
+         }
+       }
+
+      // Player collision (eating each other)
+      for (let i = 0; i < allPlayers.length; i++) {
+        for (let j = i + 1; j < allPlayers.length; j++) {
+          const p1 = allPlayers[i];
+          const p2 = allPlayers[j];
+          
+          if (p1.radius > 0 && p2.radius > 0) {
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // One player can eat another if significantly larger
+            if (distance < Math.max(p1.radius, p2.radius) * 0.8) {
+              if (p1.radius > p2.radius * 1.2) {
+                p1.radius += p2.radius * 0.5;
+                respawnPlayer(p2);
+              } else if (p2.radius > p1.radius * 1.2) {
+                p2.radius += p1.radius * 0.5;
+                respawnPlayer(p1);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Respawn a player
+    function respawnPlayer(p) {
+      if (p.isPlayer) {
+        // Respawn main player
+        p.x = Math.random() * gameWidth;
+        p.y = Math.random() * gameHeight;
+        p.radius = 20;
+      } else {
+        // Respawn bot
+        p.x = Math.random() * gameWidth;
+        p.y = Math.random() * gameHeight;
+        p.radius = Math.random() * 10 + 15;
+        p.color = getRandomColor();
+      }
+    }
+
+    // Update leaderboard
+    function updateLeaderboard() {
+      const leaderboardList = document.getElementById('leaderboard-list');
       
-      // Add AI players
-      allPlayers.forEach(aiPlayer => {
-        allPlayersData.push({
-          name: aiPlayer.name,
-          score: aiPlayer.score,
-          isHuman: false
-        });
-      });
+      // Sort players by size (radius)
+      const sortedPlayers = [...allPlayers]
+        .filter(p => p.radius > 0)
+        .sort((a, b) => b.radius - a.radius)
+        .slice(0, 10); // Top 10
 
-      // Sort by score
-      allPlayersData.sort((a, b) => b.score - a.score);
-
-      // Update leaderboard display
-      const leaderboardContent = document.getElementById('leaderboardContent');
-      leaderboardContent.innerHTML = '';
-
-      allPlayersData.slice(0, 10).forEach((playerData, index) => {
+      leaderboardList.innerHTML = '';
+      
+      sortedPlayers.forEach((p, index) => {
         const entry = document.createElement('div');
         entry.className = 'leaderboard-entry';
+        if (p.isPlayer) entry.classList.add('current-player');
         
-        const rank = index + 1;
-        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-        
+        const score = Math.floor(p.radius);
         entry.innerHTML = `
-          <span class="player-name">${medal} ${playerData.name}${playerData.isHuman ? ' (You)' : ''}</span>
-          <span class="player-score">${playerData.score}</span>
+          <span class="player-name">${index + 1}. ${p.name}</span>
+          <span class="player-score">${score}</span>
         `;
         
-        if (playerData.isHuman) {
-          entry.style.backgroundColor = 'rgba(68, 255, 68, 0.2)';
-          entry.style.borderRadius = '3px';
-        }
-        
-        leaderboardContent.appendChild(entry);
+        leaderboardList.appendChild(entry);
       });
     }
 
+    // Draw score
+    function drawScore() {
+      ctx.fillStyle = 'black';
+      ctx.font = '20px Arial';
+      const score = Math.floor(player.radius);
+      const scoreText = `Score: ${score}`;
+      const textWidth = ctx.measureText(scoreText).width;
+      ctx.fillText(scoreText, canvas.width - textWidth - 20, 30);
+    }
+
+    // Main update function
     function update() {
-      clearCanvas();
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Calculate zoom factor based on the player's size
-      let zoomFactor = Math.max(0.5, Math.min(2, 30 / player.radius));
+      // Calculate zoom and viewport
+      const zoomFactor = getZoomFactor();
+      const viewportX = getViewportX();
+      const viewportY = getViewportY();
 
-      // Calculate the viewport
-      const viewportWidth = canvas.width / zoomFactor;
-      const viewportHeight = canvas.height / zoomFactor;
-      const viewportX = Math.max(0, Math.min(player.x - viewportWidth / 2, gameWidth - viewportWidth));
-      const viewportY = Math.max(0, Math.min(player.y - viewportHeight / 2, gameHeight - viewportHeight));
-
-      // Translate and scale the context
+      // Set up camera
       ctx.save();
-      ctx.translate(-viewportX, -viewportY);
       ctx.scale(zoomFactor, zoomFactor);
+      ctx.translate(-viewportX, -viewportY);
 
+      // Draw game world
       drawGrid();
       drawFood();
-      drawAIPlayers();
-      drawPlayer();
+      drawPlayers();
 
       ctx.restore();
 
-      // Update game stats
-      document.getElementById('scoreDisplay').textContent = player.score;
-      document.getElementById('massDisplay').textContent = Math.floor(player.radius);
-
+      // Draw UI
+      drawScore();
       updateLeaderboard();
 
-      // Check for collision with food (player)
-      food.forEach((item, index) => {
-        playerPieces.forEach(piece => {
-          let dx = piece.x - item.x;
-          let dy = piece.y - item.y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
+      // Update game logic
+      updateBots();
+      checkCollisions();
+      
+      // Move player towards mouse
+      if (gameRunning) {
+        const angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
+        const speed = Math.max(1, 5 - player.radius * 0.05);
+        const dx = Math.cos(angle) * speed;
+        const dy = Math.sin(angle) * speed;
 
-          if (distance < piece.radius + item.radius) {
-            food.splice(index, 1);
-            piece.radius += item.radius / 10;
-            player.score += 1;
-          }
-        });
-      });
-
-      // Move player pieces
-      playerPieces.forEach(piece => {
-        let angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
-        let dx = Math.cos(angle) * piece.speed;
-        let dy = Math.sin(angle) * piece.speed;
-
-        piece.x = Math.max(piece.radius, Math.min(piece.x + dx, gameWidth - piece.radius));
-        piece.y = Math.max(piece.radius, Math.min(piece.y + dy, gameHeight - piece.radius));
-      });
-
-      // Update AI players
-      updateAIPlayers();
-    }
-
-    function generateFood() {
-      if (food.length < 1000) {
-        let foodX = Math.random() * gameWidth;
-        let foodY = Math.random() * gameHeight;
-        let foodRadius = Math.random() * 8 + 3;
-        let foodColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-        food.push({ x: foodX, y: foodY, radius: foodRadius, color: foodColor });
+        player.x = Math.max(player.radius, Math.min(player.x + dx, gameWidth - player.radius));
+        player.y = Math.max(player.radius, Math.min(player.y + dy, gameHeight - player.radius));
       }
     }
 
-    function splitPlayer() {
-      if (playerPieces.length === 1 && player.radius > 20) {
-        const newRadius = player.radius / 1.5;
-        const originalPiece = playerPieces[0];
-        
-        // Create new piece
-        let angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
-        playerPieces.push({
-          x: originalPiece.x + newRadius * Math.cos(angle),
-          y: originalPiece.y + newRadius * Math.sin(angle),
-          radius: newRadius,
-          color: originalPiece.color,
-          speed: originalPiece.speed,
-          name: originalPiece.name
-        });
-        
-        // Update original piece
-        originalPiece.radius = newRadius;
-      }
-    }
-
+    // Game loop
     function gameLoop() {
       if (gameRunning) {
         update();
@@ -459,27 +518,18 @@
       mouseY = event.clientY - rect.top;
     });
 
-    window.addEventListener('keydown', function(event) {
-      if (event.key === ' ') {
-        event.preventDefault();
-        splitPlayer();
-      }
-    });
-
     document.getElementById('startButton').addEventListener('click', function() {
-      const playerName = document.getElementById('nameInput').value;
-      if (playerName.trim()) {
+      const playerName = document.getElementById('nameInput').value.trim();
+      if (playerName) {
         player.name = playerName;
-        // Add player to allPlayers list for leaderboard
-        allPlayers.unshift(player);
-      } else {
-        player.name = 'Anonymous';
-        allPlayers.unshift(player);
       }
       
       if (!gameRunning) {
-        generateAIPlayers();
         gameRunning = true;
+        if (bots.length === 0) {
+          createBots(15); // Create 15 bots
+        }
+        generateFood();
         gameLoop();
       }
     });
@@ -492,13 +542,61 @@
     });
 
     document.getElementById('restartButton').addEventListener('click', function() {
-      window.location.reload();
+      // Reset game state
+      gameRunning = false;
+      if (gameLoopId) {
+        cancelAnimationFrame(gameLoopId);
+      }
+      
+      // Reset player
+      player.x = gameWidth / 2;
+      player.y = gameHeight / 2;
+      player.radius = 20;
+      player.name = document.getElementById('nameInput').value.trim() || 'You';
+      
+      // Clear and recreate game objects
+      allPlayers = [player];
+      food = [];
+      bots = [];
+      
+      // Clear leaderboard
+      document.getElementById('leaderboard-list').innerHTML = '';
     });
 
-    // Generate initial food
-    for (let i = 0; i < 500; i++) {
-      generateFood();
-    }
-  </script> 
+    // Split player functionality (space key)
+    window.addEventListener('keydown', function(event) {
+      if (event.code === 'Space' && gameRunning && player.radius > 30) {
+        event.preventDefault();
+        const newRadius = player.radius * 0.7;
+        player.radius = newRadius;
+        
+        // Create smaller piece that moves away
+        const angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
+        const newPlayer = {
+          x: player.x + Math.cos(angle) * 50,
+          y: player.y + Math.sin(angle) * 50,
+          radius: newRadius,
+          color: player.color,
+          speed: player.speed * 1.5,
+          name: player.name,
+          id: 'player_split',
+          isPlayer: true
+        };
+        
+        allPlayers.push(newPlayer);
+        
+        // Remove split piece after 5 seconds
+        setTimeout(() => {
+          const index = allPlayers.indexOf(newPlayer);
+          if (index > -1) {
+            allPlayers.splice(index, 1);
+          }
+        }, 5000);
+      }
+    });
+
+    // Initialize
+    generateFood();
+  </script>
 </body>
 </html>
