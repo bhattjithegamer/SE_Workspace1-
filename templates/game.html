@@ -3,40 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agar.io - Enhanced Edition</title>
+  <title>Agar.io Clone - Game</title>
   <style>
-    * {
+    body {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
       overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: white;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
     canvas {
-      background: radial-gradient(circle at center, #001122 0%, #000511 100%);
+      background-color: #f0f8ff;
       display: block;
-      border: 3px solid #00ffff;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      border: 5px solid #000;
     }
 
-    /* Top Controls */
-    .top-controls {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 100;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    /* Animated Search Input for Start Button */
+    /* Fancy animated search input styles */
     .grid {
       height: 800px;
       width: 800px;
@@ -76,7 +59,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
     }
 
     .input::placeholder {
@@ -211,15 +197,12 @@
     #poda:hover > .darkBorderBg::before {
       transform: translate(-50%, -50%) rotate(262deg);
     }
-
     #poda:hover > .glow::before {
       transform: translate(-50%, -50%) rotate(240deg);
     }
-
     #poda:hover > .white::before {
       transform: translate(-50%, -50%) rotate(263deg);
     }
-
     #poda:hover > .border::before {
       transform: translate(-50%, -50%) rotate(250deg);
     }
@@ -228,17 +211,14 @@
       transform: translate(-50%, -50%) rotate(442deg);
       transition: all 4s;
     }
-
     #poda:focus-within > .glow::before {
       transform: translate(-50%, -50%) rotate(420deg);
       transition: all 4s;
     }
-
     #poda:focus-within > .white::before {
       transform: translate(-50%, -50%) rotate(443deg);
       transition: all 4s;
     }
-
     #poda:focus-within > .border::before {
       transform: translate(-50%, -50%) rotate(430deg);
       transition: all 4s;
@@ -343,102 +323,74 @@
       top: 15px;
     }
 
-    /* Regular Buttons */
-    .game-button {
-      padding: 12px 20px;
+    /* Game UI Elements */
+    button, input {
+      position: fixed;
+      z-index: 10;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 2px solid #333;
+      border-radius: 5px;
+      background-color: rgba(240, 240, 240, 0.9);
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    input {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    button:hover {
+      background-color: rgba(224, 224, 224, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #stopButton {
+      top: 10px;
+      right: 250px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
       border: none;
-      border-radius: 8px;
+    }
+
+    #restartButton {
+      top: 10px;
+      right: 140px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      border: none;
     }
 
-    .game-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    }
-
-    .stop-button {
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-    }
-
-    .stop-button:hover {
-      background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
-    }
-
-    .restart-button {
-      background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
-      margin-left: 10px;
-    }
-
-    .restart-button:hover {
-      background: linear-gradient(135deg, #44a08d 0%, #4ecdc4 100%);
-    }
-
-    /* User Info Panel */
-    .user-panel {
-      position: fixed;
-      top: 20px;
+    #logoutButton {
+      top: 10px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 15px;
-      border-radius: 10px;
-      border: 1px solid rgba(0, 255, 255, 0.3);
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-      z-index: 100;
-    }
-
-    .user-info {
-      color: #00ffff;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    #gameStats {
-      background: rgba(0, 0, 0, 0.8);
+      background: linear-gradient(135deg, #333 0%, #555 100%);
       color: white;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: none;
     }
 
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 5px 0;
-    }
-
-    .stat-value {
-      color: #00ffff;
-      font-weight: bold;
-    }
-
-    /* Leaderboard */
     #leaderboard {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.9);
+      background-color: rgba(0, 0, 0, 0.9);
       color: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 15px;
       min-width: 250px;
-      z-index: 100;
-      border: 2px solid rgba(0, 255, 255, 0.3);
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     #leaderboard h3 {
-      margin: 0 0 15px 0;
+      margin: 0 0 10px 0;
       text-align: center;
       font-size: 18px;
-      color: #00ffff;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      color: #ffdd44;
+      text-shadow: 0 0 10px #ffdd44;
     }
 
     .leaderboard-entry {
@@ -452,11 +404,11 @@
     }
 
     .leaderboard-entry:hover {
-      background: rgba(0, 255, 255, 0.1);
+      background-color: rgba(255, 255, 255, 0.1);
     }
 
     .player-name {
-      max-width: 150px;
+      max-width: 140px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -464,151 +416,146 @@
 
     .player-score {
       font-weight: bold;
-      color: #00ff88;
+      color: #44ff44;
+      text-shadow: 0 0 5px #44ff44;
     }
 
-    /* Logout Button */
-    .logout-btn {
-      background: linear-gradient(135deg, #ff4757 0%, #c44569 100%);
-      border: none;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-top: 10px;
-      transition: all 0.3s ease;
-    }
-
-    .logout-btn:hover {
-      background: linear-gradient(135deg, #c44569 0%, #ff4757 100%);
-      transform: translateY(-1px);
-    }
-
-    /* Enhanced Visual Effects */
-    .glow-effect {
-      animation: pulse 2s ease-in-out infinite alternate;
-    }
-
-    @keyframes pulse {
-      from { filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5)); }
-      to { filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8)); }
-    }
-
-    /* Mini-map */
-    .mini-map {
+    #gameStats {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
-      width: 150px;
-      height: 150px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid rgba(0, 255, 255, 0.5);
+      top: 80px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px;
       border-radius: 10px;
-      z-index: 100;
+      z-index: 10;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    #miniCanvas {
-      width: 100%;
-      height: 100%;
-      border-radius: 8px;
+    .stat-item {
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .stat-value {
+      font-weight: bold;
+      color: #00ffff;
+      text-shadow: 0 0 5px #00ffff;
+    }
+
+    /* Floating notifications */
+    .notification {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-size: 24px;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 2px solid #ffdd44;
+      animation: fadeInOut 3s ease-in-out;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
     }
   </style>
 </head>
 <body>
-  <!-- User Panel -->
-  <div class="user-panel">
-    <div class="user-info">🎮 Player: {{ username }}</div>
-    <div id="gameStats">
-      <div class="stat-row">
-        <span>Score:</span>
-        <span class="stat-value" id="scoreDisplay">0</span>
-      </div>
-      <div class="stat-row">
-        <span>Mass:</span>
-        <span class="stat-value" id="massDisplay">0</span>
-      </div>
-      <div class="stat-row">
-        <span>Cells:</span>
-        <span class="stat-value" id="cellsDisplay">1</span>
-      </div>
+  
+  <div class="grid"></div>
+  
+  <!-- Fancy search input as start button -->
+  <div id="poda"> 
+    <div class="glow"></div> 
+    <div class="darkBorderBg"></div> 
+    <div class="darkBorderBg"></div> 
+    <div class="darkBorderBg"></div> 
+    <div class="white"></div> 
+    <div class="border"></div> 
+    <div id="main"> 
+      <input placeholder="Enter your name to start..." type="text" name="text" class="input" id="nameInput" /> 
+      <div id="input-mask"></div> 
+      <div id="pink-mask"></div> 
+      <div class="filterBorder"></div> 
+      <div id="filter-icon"> 
+        <svg preserveAspectRatio="none" height="27" width="27" viewBox="4.8 4.56 14.832 15.408" fill="none"> 
+          <path d="M8.16 6.65002H15.83C16.47 6.65002 16.99 7.17002 16.99 7.81002V9.09002C16.99 9.56002 16.7 10.14 16.41 10.43L13.91 12.64C13.56 12.93 13.33 13.51 13.33 13.98V16.48C13.33 16.83 13.1 17.29 12.81 17.47L12 17.98C11.24 18.45 10.2 17.92 10.2 16.99V13.91C10.2 13.5 9.97 12.98 9.73 12.69L7.52 10.36C7.23 10.08 7 9.55002 7 9.20002V7.87002C7 7.17002 7.52 6.65002 8.16 6.65002Z" stroke="#d6d6e6" stroke-width="1" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path> 
+        </svg> 
+      </div> 
+      <div id="search-icon"> 
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" height="24" fill="none" class="feather feather-search"> 
+          <circle stroke="url(#search)" r="8" cy="11" cx="11"></circle> 
+          <line stroke="url(#searchl)" y2="16.65" y1="22" x2="16.65" x1="22"></line> 
+          <defs> 
+            <linearGradient gradientTransform="rotate(50)" id="search"> 
+              <stop stop-color="#f8e7f8" offset="0%"></stop> 
+              <stop stop-color="#b6a9b7" offset="50%"></stop> 
+            </linearGradient> 
+            <linearGradient id="searchl"> 
+              <stop stop-color="#b6a9b7" offset="0%"></stop> 
+              <stop stop-color="#837484" offset="50%"></stop> 
+            </linearGradient> 
+          </defs> 
+        </svg> 
+      </div> 
     </div>
-    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
-  <!-- Top Controls with Animated Search Input -->
-  <div class="top-controls">
-    <div id="poda"> 
-      <div class="glow"></div> 
-      <div class="darkBorderBg"></div> 
-      <div class="darkBorderBg"></div> 
-      <div class="darkBorderBg"></div> 
-      <div class="white"></div> 
-      <div class="border"></div> 
-      <div id="main"> 
-        <input placeholder="Enter your name to start..." type="text" name="text" class="input" id="nameInput" /> 
-        <div id="input-mask"></div> 
-        <div id="pink-mask"></div> 
-        <div class="filterBorder"></div> 
-        <div id="filter-icon"> 
-          <svg preserveAspectRatio="none" height="27" width="27" viewBox="4.8 4.56 14.832 15.408" fill="none"> 
-            <path d="M8.16 6.65002H15.83C16.47 6.65002 16.99 7.17002 16.99 7.81002V9.09002C16.99 9.56002 16.7 10.14 16.41 10.43L13.91 12.64C13.56 12.93 13.33 13.51 13.33 13.98V16.48C13.33 16.83 13.1 17.29 12.81 17.47L12 17.98C11.24 18.45 10.2 17.92 10.2 16.99V13.91C10.2 13.5 9.97 12.98 9.73 12.69L7.52 10.36C7.23 10.08 7 9.55002 7 9.20002V7.87002C7 7.17002 7.52 6.65002 8.16 6.65002Z" stroke="#d6d6e6" stroke-width="1" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path> 
-          </svg> 
-        </div> 
-        <div id="search-icon"> 
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" height="24" fill="none" class="feather feather-search"> 
-            <circle stroke="url(#search)" r="8" cy="11" cx="11"></circle> 
-            <line stroke="url(#searchl)" y2="16.65" y1="22" x2="16.65" x1="22"></line> 
-            <defs> 
-              <linearGradient gradientTransform="rotate(50)" id="search"> 
-                <stop stop-color="#f8e7f8" offset="0%"></stop> 
-                <stop stop-color="#b6a9b7" offset="50%"></stop> 
-              </linearGradient> 
-              <linearGradient id="searchl"> 
-                <stop stop-color="#b6a9b7" offset="0%"></stop> 
-                <stop stop-color="#837484" offset="50%"></stop> 
-              </linearGradient> 
-            </defs> 
-          </svg> 
-        </div> 
-      </div>
+  <button id="stopButton">⏸ Stop</button>
+  <button id="restartButton">🔄 Restart</button>
+  <button id="logoutButton">🚪 Logout</button>
+  
+  <div id="gameStats">
+    <div class="stat-item">
+      <span>Score:</span>
+      <span class="stat-value" id="scoreDisplay">0</span>
     </div>
-
-    <button class="game-button" id="startButton">🚀 START GAME</button>
-    <button class="game-button stop-button" id="stopButton">⏹️ STOP</button>
-    <button class="game-button restart-button" id="restartButton">🔄 RESTART</button>
+    <div class="stat-item">
+      <span>Mass:</span>
+      <span class="stat-value" id="massDisplay">0</span>
+    </div>
+    <div class="stat-item">
+      <span>Player:</span>
+      <span class="stat-value" id="playerDisplay">Guest</span>
+    </div>
   </div>
-
-  <!-- Leaderboard -->
+  
   <div id="leaderboard">
-    <h3>🏆 LEADERBOARD</h3>
+    <h3>🏆 Leaderboard</h3>
     <div id="leaderboardContent"></div>
   </div>
-
-  <!-- Mini Map -->
-  <div class="mini-map">
-    <canvas id="miniCanvas" width="150" height="150"></canvas>
-  </div>
-
-  <!-- Game Canvas -->
-  <canvas id="gameCanvas" class="glow-effect"></canvas>
+  
+  <canvas id="gameCanvas"></canvas>
   
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const miniCanvas = document.getElementById('miniCanvas');
-    const miniCtx = miniCanvas.getContext('2d');
 
-    const gameWidth = 10000;
-    const gameHeight = 10000;
+    const gameWidth = 8000;
+    const gameHeight = 8000;
+
+    let userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    let camera = { x: 0, y: 0, zoom: 1 };
 
     let player = {
       x: gameWidth / 2,
       y: gameHeight / 2,
       radius: 25,
-      color: '#00ffff',
-      speed: 3,
-      name: '{{ username }}',
+      color: '#' + Math.floor(Math.random()*16777215).toString(16),
+      speed: 4,
+      name: userData.username || '',
       score: 0,
       isPlayer: true
     };
@@ -621,250 +568,208 @@
 
     let gameRunning = false;
     let gameLoopId = null;
-    let camera = { x: 0, y: 0 };
 
-    // Set the canvas to fullscreen
+    // Set canvas to fullscreen
     function setCanvasFullscreen() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      mouseX = canvas.width / 2;
+      mouseY = canvas.height / 2;
     }
 
     setCanvasFullscreen();
     window.addEventListener('resize', setCanvasFullscreen);
 
-    // Enhanced AI Players
+    // Update player display
+    document.getElementById('playerDisplay').textContent = userData.username || 'Guest';
+
+    // Generate AI players with enhanced behavior
     function generateAIPlayers() {
-      const aiNames = ['🤖 Alpha', '🔥 Beta', '⚡ Gamma', '💎 Delta', '🌟 Epsilon', '🎯 Zeta', '💫 Eta', '🌈 Theta'];
-      const colors = ['#ff4757', '#2ed573', '#a55eea', '#ffa502', '#ff6b9d', '#26d0ce', '#ffdd59', '#8b4513'];
+      const aiNames = ['Alpha Bot', 'Beta Destroyer', 'Gamma Hunter', 'Delta Warrior', 'Epsilon King', 'Zeta Master', 'Eta Champion', 'Theta Legend'];
+      const colors = ['#ff4757', '#2ed573', '#a55eea', '#fd9644', '#ff6b9d', '#26d0ce', '#fed330', '#a55eea'];
       
       for (let i = 0; i < 8; i++) {
         let aiPlayer = {
           x: Math.random() * (gameWidth - 200) + 100,
           y: Math.random() * (gameHeight - 200) + 100,
-          radius: Math.random() * 35 + 20,
+          radius: Math.random() * 25 + 20,
           color: colors[i],
-          speed: Math.random() * 2.5 + 1.5,
+          speed: Math.random() * 2 + 2.5,
           name: aiNames[i],
-          score: Math.floor(Math.random() * 150),
+          score: Math.floor(Math.random() * 200) + 50,
           isPlayer: false,
           targetX: Math.random() * gameWidth,
           targetY: Math.random() * gameHeight,
           lastDirectionChange: 0,
-          aggressiveness: Math.random()
+          intelligence: Math.random() * 0.8 + 0.2
         };
         allPlayers.push(aiPlayer);
       }
     }
 
-    // Enhanced Grid Drawing
+    function updateCamera() {
+      // Smooth camera following with zoom based on player size
+      camera.zoom = Math.max(0.4, Math.min(1.5, 500 / (player.radius + 200)));
+      
+      camera.x = player.x - canvas.width / (2 * camera.zoom);
+      camera.y = player.y - canvas.height / (2 * camera.zoom);
+      
+      // Keep camera within bounds
+      camera.x = Math.max(0, Math.min(camera.x, gameWidth - canvas.width / camera.zoom));
+      camera.y = Math.max(0, Math.min(camera.y, gameHeight - canvas.height / camera.zoom));
+    }
+
     function drawGrid() {
-      const gridSize = 100;
-      ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+      const gridSize = 40;
+      ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
       ctx.lineWidth = 1;
 
       const startX = Math.floor(camera.x / gridSize) * gridSize;
       const startY = Math.floor(camera.y / gridSize) * gridSize;
-      const endX = camera.x + canvas.width;
-      const endY = camera.y + canvas.height;
+      const endX = camera.x + canvas.width / camera.zoom;
+      const endY = camera.y + canvas.height / camera.zoom;
 
       for (let x = startX; x <= endX; x += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(x - camera.x, 0);
-        ctx.lineTo(x - camera.x, canvas.height);
+        ctx.moveTo((x - camera.x) * camera.zoom, 0);
+        ctx.lineTo((x - camera.x) * camera.zoom, canvas.height);
         ctx.stroke();
       }
 
       for (let y = startY; y <= endY; y += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(0, y - camera.y);
-        ctx.lineTo(canvas.width, y - camera.y);
+        ctx.moveTo(0, (y - camera.y) * camera.zoom);
+        ctx.lineTo(canvas.width, (y - camera.y) * camera.zoom);
         ctx.stroke();
       }
     }
 
-    // Enhanced Player Drawing with Glow Effects
     function drawPlayer() {
       playerPieces.forEach(piece => {
-        const screenX = piece.x - camera.x;
-        const screenY = piece.y - camera.y;
+        const screenX = (piece.x - camera.x) * camera.zoom;
+        const screenY = (piece.y - camera.y) * camera.zoom;
+        const screenRadius = piece.radius * camera.zoom;
 
-        // Glow effect
-        ctx.shadowColor = piece.color;
-        ctx.shadowBlur = 20;
-        
-        // Main circle
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, piece.radius, 0, Math.PI * 2);
-        ctx.fillStyle = piece.color;
-        ctx.fill();
-        
-        // Border
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+        // Only draw if visible
+        if (screenX + screenRadius > 0 && screenX - screenRadius < canvas.width &&
+            screenY + screenRadius > 0 && screenY - screenRadius < canvas.height) {
+          
+          // Draw glow effect
+          ctx.shadowColor = piece.color;
+          ctx.shadowBlur = 20;
+          
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, screenRadius, 0, Math.PI * 2);
+          ctx.fillStyle = piece.color;
+          ctx.fill();
+          
+          // Reset shadow
+          ctx.shadowBlur = 0;
+          
+          // Draw border
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 3;
+          ctx.stroke();
 
-        // Name
-        if (piece.name) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `bold ${Math.max(16, piece.radius / 2)}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 2;
-          ctx.strokeText(piece.name, screenX, screenY);
-          ctx.fillText(piece.name, screenX, screenY);
+          // Draw name
+          if (piece.name && screenRadius > 15) {
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${Math.max(12, screenRadius / 3)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeText(piece.name, screenX, screenY);
+            ctx.fillText(piece.name, screenX, screenY);
+          }
         }
       });
     }
 
-    // Enhanced AI Drawing
     function drawAIPlayers() {
       allPlayers.forEach(aiPlayer => {
-        const screenX = aiPlayer.x - camera.x;
-        const screenY = aiPlayer.y - camera.y;
+        const screenX = (aiPlayer.x - camera.x) * camera.zoom;
+        const screenY = (aiPlayer.y - camera.y) * camera.zoom;
+        const screenRadius = aiPlayer.radius * camera.zoom;
 
-        // Only draw if on screen
-        if (screenX > -aiPlayer.radius && screenX < canvas.width + aiPlayer.radius &&
-            screenY > -aiPlayer.radius && screenY < canvas.height + aiPlayer.radius) {
+        // Only draw if visible
+        if (screenX + screenRadius > 0 && screenX - screenRadius < canvas.width &&
+            screenY + screenRadius > 0 && screenY - screenRadius < canvas.height) {
           
-          // Glow effect for larger players
-          if (aiPlayer.radius > 30) {
-            ctx.shadowColor = aiPlayer.color;
-            ctx.shadowBlur = 15;
-          }
-
           ctx.beginPath();
-          ctx.arc(screenX, screenY, aiPlayer.radius, 0, Math.PI * 2);
+          ctx.arc(screenX, screenY, screenRadius, 0, Math.PI * 2);
           ctx.fillStyle = aiPlayer.color;
           ctx.fill();
-          
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = '#ffffff';
+          ctx.strokeStyle = '#000';
           ctx.lineWidth = 2;
           ctx.stroke();
 
-          // Name
-          ctx.fillStyle = '#ffffff';
-          ctx.font = `bold ${Math.max(12, aiPlayer.radius / 3)}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 1;
-          ctx.strokeText(aiPlayer.name, screenX, screenY);
-          ctx.fillText(aiPlayer.name, screenX, screenY);
+          // Draw AI name
+          if (screenRadius > 10) {
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${Math.max(10, screenRadius / 3)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1;
+            ctx.strokeText(aiPlayer.name, screenX, screenY);
+            ctx.fillText(aiPlayer.name, screenX, screenY);
+          }
         }
       });
     }
 
-    // Enhanced Food Drawing
     function drawFood() {
       food.forEach((item) => {
-        const screenX = item.x - camera.x;
-        const screenY = item.y - camera.y;
+        const screenX = (item.x - camera.x) * camera.zoom;
+        const screenY = (item.y - camera.y) * camera.zoom;
+        const screenRadius = item.radius * camera.zoom;
 
-        if (screenX > -item.radius && screenX < canvas.width + item.radius &&
-            screenY > -item.radius && screenY < canvas.height + item.radius) {
-          
-          ctx.shadowColor = item.color;
-          ctx.shadowBlur = 5;
+        // Only draw if visible
+        if (screenX + screenRadius > 0 && screenX - screenRadius < canvas.width &&
+            screenY + screenRadius > 0 && screenY - screenRadius < canvas.height) {
           
           ctx.beginPath();
-          ctx.arc(screenX, screenY, item.radius, 0, Math.PI * 2);
+          ctx.arc(screenX, screenY, screenRadius, 0, Math.PI * 2);
           ctx.fillStyle = item.color;
           ctx.fill();
-          
-          ctx.shadowBlur = 0;
         }
       });
-    }
-
-    // Camera System
-    function updateCamera() {
-      const targetX = player.x - canvas.width / 2;
-      const targetY = player.y - canvas.height / 2;
-      
-      camera.x += (targetX - camera.x) * 0.1;
-      camera.y += (targetY - camera.y) * 0.1;
-      
-      // Keep camera within bounds
-      camera.x = Math.max(0, Math.min(camera.x, gameWidth - canvas.width));
-      camera.y = Math.max(0, Math.min(camera.y, gameHeight - canvas.height));
-    }
-
-    // Mini Map
-    function drawMiniMap() {
-      miniCtx.clearRect(0, 0, 150, 150);
-      
-      // Background
-      miniCtx.fillStyle = 'rgba(0, 20, 40, 0.8)';
-      miniCtx.fillRect(0, 0, 150, 150);
-      
-      // Border
-      miniCtx.strokeStyle = '#00ffff';
-      miniCtx.lineWidth = 2;
-      miniCtx.strokeRect(0, 0, 150, 150);
-      
-      const scaleX = 150 / gameWidth;
-      const scaleY = 150 / gameHeight;
-      
-      // Player
-      miniCtx.fillStyle = player.color;
-      miniCtx.beginPath();
-      miniCtx.arc(player.x * scaleX, player.y * scaleY, Math.max(2, player.radius * scaleX), 0, Math.PI * 2);
-      miniCtx.fill();
-      
-      // AI Players
-      allPlayers.forEach(ai => {
-        miniCtx.fillStyle = ai.color;
-        miniCtx.beginPath();
-        miniCtx.arc(ai.x * scaleX, ai.y * scaleY, Math.max(1, ai.radius * scaleX), 0, Math.PI * 2);
-        miniCtx.fill();
-      });
-      
-      // Viewport indicator
-      miniCtx.strokeStyle = '#ffffff';
-      miniCtx.lineWidth = 1;
-      miniCtx.strokeRect(camera.x * scaleX, camera.y * scaleY, canvas.width * scaleX, canvas.height * scaleY);
     }
 
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Enhanced AI Behavior
     function updateAIPlayers() {
       allPlayers.forEach(aiPlayer => {
-        // More intelligent AI movement
-        if (Date.now() - aiPlayer.lastDirectionChange > 3000) {
-          // Look for nearby food or smaller players
-          let closestTarget = null;
-          let closestDistance = Infinity;
-          
-          // Check food
-          food.forEach(item => {
-            const distance = Math.sqrt(Math.pow(aiPlayer.x - item.x, 2) + Math.pow(aiPlayer.y - item.y, 2));
-            if (distance < closestDistance && distance < 300) {
-              closestTarget = item;
-              closestDistance = distance;
-            }
-          });
-          
-          // Check smaller players
-          [...allPlayers, ...playerPieces].forEach(otherPlayer => {
-            if (otherPlayer !== aiPlayer && otherPlayer.radius < aiPlayer.radius * 0.8) {
-              const distance = Math.sqrt(Math.pow(aiPlayer.x - otherPlayer.x, 2) + Math.pow(aiPlayer.y - otherPlayer.y, 2));
-              if (distance < closestDistance && distance < 400) {
-                closestTarget = otherPlayer;
-                closestDistance = distance;
+        // Enhanced AI behavior
+        if (Date.now() - aiPlayer.lastDirectionChange > 3000 * aiPlayer.intelligence) {
+          // Sometimes hunt food, sometimes avoid bigger players
+          if (Math.random() < 0.7) {
+            // Hunt for food
+            let nearestFood = null;
+            let nearestDistance = Infinity;
+            
+            food.forEach(item => {
+              const distance = Math.sqrt(
+                (aiPlayer.x - item.x) ** 2 + (aiPlayer.y - item.y) ** 2
+              );
+              if (distance < nearestDistance && distance < 300) {
+                nearestDistance = distance;
+                nearestFood = item;
               }
+            });
+            
+            if (nearestFood) {
+              aiPlayer.targetX = nearestFood.x;
+              aiPlayer.targetY = nearestFood.y;
+            } else {
+              aiPlayer.targetX = Math.random() * gameWidth;
+              aiPlayer.targetY = Math.random() * gameHeight;
             }
-          });
-          
-          if (closestTarget) {
-            aiPlayer.targetX = closestTarget.x;
-            aiPlayer.targetY = closestTarget.y;
           } else {
+            // Random movement
             aiPlayer.targetX = Math.random() * gameWidth;
             aiPlayer.targetY = Math.random() * gameHeight;
           }
@@ -872,11 +777,12 @@
           aiPlayer.lastDirectionChange = Date.now();
         }
 
+        // Move towards target
         let dx = aiPlayer.targetX - aiPlayer.x;
         let dy = aiPlayer.targetY - aiPlayer.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 15) {
+        if (distance > 10) {
           let moveX = (dx / distance) * aiPlayer.speed;
           let moveY = (dy / distance) * aiPlayer.speed;
           
@@ -899,10 +805,10 @@
       });
     }
 
-    // Enhanced Leaderboard
     function updateLeaderboard() {
       let allPlayersData = [];
       
+      // Add human player
       if (player.name) {
         allPlayersData.push({
           name: player.name,
@@ -911,6 +817,7 @@
         });
       }
       
+      // Add AI players
       allPlayers.forEach(aiPlayer => {
         allPlayersData.push({
           name: aiPlayer.name,
@@ -919,8 +826,10 @@
         });
       });
 
+      // Sort by score
       allPlayersData.sort((a, b) => b.score - a.score);
 
+      // Update leaderboard display
       const leaderboardContent = document.getElementById('leaderboardContent');
       leaderboardContent.innerHTML = '';
 
@@ -937,30 +846,39 @@
         `;
         
         if (playerData.isHuman) {
-          entry.style.background = 'linear-gradient(90deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 255, 0.1))';
-          entry.style.borderRadius = '5px';
-          entry.style.border = '1px solid rgba(0, 255, 255, 0.3)';
+          entry.style.background = 'linear-gradient(90deg, rgba(68, 255, 68, 0.2), rgba(68, 255, 68, 0.1))';
+          entry.style.borderLeft = '3px solid #44ff44';
         }
         
         leaderboardContent.appendChild(entry);
       });
     }
 
-    // Main Update Function
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 3000);
+    }
+
     function update() {
       clearCanvas();
       updateCamera();
-
+      
+      ctx.save();
       drawGrid();
       drawFood();
       drawAIPlayers();
       drawPlayer();
-      drawMiniMap();
+      ctx.restore();
 
       // Update game stats
       document.getElementById('scoreDisplay').textContent = player.score;
       document.getElementById('massDisplay').textContent = Math.floor(player.radius);
-      document.getElementById('cellsDisplay').textContent = playerPieces.length;
 
       updateLeaderboard();
 
@@ -973,77 +891,66 @@
 
           if (distance < piece.radius + item.radius) {
             food.splice(index, 1);
-            piece.radius += item.radius / 8;
-            player.score += 2;
-            
-            // Save score to backend
-            saveScore(player.score);
+            piece.radius += item.radius / 6;
+            player.score += 1;
           }
         });
       });
 
-      // Move player pieces toward mouse
+      // Move player towards mouse
       playerPieces.forEach(piece => {
-        // Convert mouse position to world coordinates
-        const worldMouseX = mouseX + camera.x;
-        const worldMouseY = mouseY + camera.y;
+        const worldMouseX = camera.x + mouseX / camera.zoom;
+        const worldMouseY = camera.y + mouseY / camera.zoom;
         
-        let dx = worldMouseX - piece.x;
-        let dy = worldMouseY - piece.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
+        let angle = Math.atan2(worldMouseY - piece.y, worldMouseX - piece.x);
+        let dx = Math.cos(angle) * piece.speed;
+        let dy = Math.sin(angle) * piece.speed;
 
-        if (distance > 5) {
-          let speed = Math.max(1, piece.speed - piece.radius / 50);
-          let moveX = (dx / distance) * speed;
-          let moveY = (dy / distance) * speed;
-
-          piece.x = Math.max(piece.radius, Math.min(piece.x + moveX, gameWidth - piece.radius));
-          piece.y = Math.max(piece.radius, Math.min(piece.y + moveY, gameHeight - piece.radius));
-        }
+        piece.x = Math.max(piece.radius, Math.min(piece.x + dx, gameWidth - piece.radius));
+        piece.y = Math.max(piece.radius, Math.min(piece.y + dy, gameHeight - piece.radius));
       });
+
+      // Update player reference for camera
+      if (playerPieces.length > 0) {
+        player.x = playerPieces[0].x;
+        player.y = playerPieces[0].y;
+        player.radius = playerPieces[0].radius;
+      }
 
       updateAIPlayers();
     }
 
-    // Enhanced Food Generation
     function generateFood() {
-      if (food.length < 2000) {
-        for (let i = 0; i < 5; i++) {
-          let foodX = Math.random() * gameWidth;
-          let foodY = Math.random() * gameHeight;
-          let foodRadius = Math.random() * 6 + 3;
-          let hue = Math.random() * 360;
-          let foodColor = `hsl(${hue}, 70%, 60%)`;
-          food.push({ x: foodX, y: foodY, radius: foodRadius, color: foodColor });
-        }
+      while (food.length < 800) {
+        let foodX = Math.random() * gameWidth;
+        let foodY = Math.random() * gameHeight;
+        let foodRadius = Math.random() * 6 + 4;
+        let foodColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+        food.push({ x: foodX, y: foodY, radius: foodRadius, color: foodColor });
       }
     }
 
-    // Enhanced Split Function
     function splitPlayer() {
-      if (playerPieces.length < 4 && player.radius > 25) {
-        playerPieces.forEach((piece, index) => {
-          if (piece.radius > 25) {
-            const newRadius = piece.radius / 1.4;
-            
-            const worldMouseX = mouseX + camera.x;
-            const worldMouseY = mouseY + camera.y;
-            let angle = Math.atan2(worldMouseY - piece.y, worldMouseX - piece.x);
-            
-            const newPiece = {
-              x: piece.x + newRadius * 2 * Math.cos(angle),
-              y: piece.y + newRadius * 2 * Math.sin(angle),
-              radius: newRadius,
-              color: piece.color,
-              speed: piece.speed + 1,
-              name: piece.name,
-              splitTime: Date.now()
-            };
-            
-            piece.radius = newRadius;
-            playerPieces.push(newPiece);
-          }
+      if (playerPieces.length === 1 && player.radius > 25) {
+        const newRadius = player.radius * 0.7;
+        const originalPiece = playerPieces[0];
+        
+        const worldMouseX = camera.x + mouseX / camera.zoom;
+        const worldMouseY = camera.y + mouseY / camera.zoom;
+        let angle = Math.atan2(worldMouseY - originalPiece.y, worldMouseX - originalPiece.x);
+        
+        playerPieces.push({
+          x: originalPiece.x + newRadius * Math.cos(angle) * 2,
+          y: originalPiece.y + newRadius * Math.sin(angle) * 2,
+          radius: newRadius,
+          color: originalPiece.color,
+          speed: originalPiece.speed * 1.5,
+          name: originalPiece.name
         });
+        
+        originalPiece.radius = newRadius;
+        
+        showNotification('Player Split!');
       }
     }
 
@@ -1053,26 +960,6 @@
         generateFood();
         gameLoopId = requestAnimationFrame(gameLoop);
       }
-    }
-
-    // Save score to backend
-    async function saveScore(score) {
-      try {
-        await fetch('/api/save_score', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ score: score })
-        });
-      } catch (error) {
-        console.error('Failed to save score:', error);
-      }
-    }
-
-    // Logout function
-    function logout() {
-      window.location.href = '/logout';
     }
 
     // Event listeners
@@ -1089,57 +976,96 @@
       }
     });
 
-    // Enhanced Start Button
-    document.getElementById('startButton').addEventListener('click', function() {
-      const nameInput = document.getElementById('nameInput');
-      const playerName = nameInput.value.trim();
+    document.getElementById('nameInput').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        startGame();
+      }
+    });
+
+    document.getElementById('nameInput').addEventListener('focus', function() {
+      if (!gameRunning) {
+        this.placeholder = 'Press Enter to start!';
+      }
+    });
+
+    function startGame() {
+      const playerName = document.getElementById('nameInput').value || userData.username || 'Anonymous';
+      player.name = playerName;
+      playerPieces[0].name = playerName;
       
-      if (playerName && !gameRunning) {
-        player.name = playerName;
-        playerPieces[0].name = playerName;
-        
-        // Clear existing AI players
-        allPlayers = [];
+      if (!gameRunning) {
         generateAIPlayers();
-        
+        generateFood();
         gameRunning = true;
         gameLoop();
         
-        // Hide the name input after starting
-        nameInput.style.display = 'none';
-        this.textContent = '🎮 PLAYING...';
-        this.disabled = true;
-      } else if (!playerName) {
-        alert('Please enter your name to start!');
-        nameInput.focus();
+        // Hide the fancy input
+        document.getElementById('poda').style.display = 'none';
+        
+        showNotification(`Welcome ${playerName}! Use mouse to move, SPACE to split!`);
       }
-    });
+    }
 
     document.getElementById('stopButton').addEventListener('click', function() {
       if (gameRunning) {
         gameRunning = false;
         cancelAnimationFrame(gameLoopId);
-        
-        const startBtn = document.getElementById('startButton');
-        const nameInput = document.getElementById('nameInput');
-        
-        startBtn.textContent = '🚀 START GAME';
-        startBtn.disabled = false;
-        nameInput.style.display = 'block';
+        showNotification('Game Paused');
+      } else {
+        gameRunning = true;
+        gameLoop();
+        showNotification('Game Resumed');
       }
+      this.textContent = gameRunning ? '⏸ Stop' : '▶ Start';
     });
 
     document.getElementById('restartButton').addEventListener('click', function() {
-      window.location.reload();
+      if (confirm('Are you sure you want to restart?')) {
+        // Save score before restart
+        if (player.score > 0) {
+          fetch('/update_score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score: player.score })
+          });
+        }
+        window.location.reload();
+      }
     });
 
-    // Initialize with some food
-    for (let i = 0; i < 1000; i++) {
-      generateFood();
-    }
+    document.getElementById('logoutButton').addEventListener('click', function() {
+      if (confirm('Are you sure you want to logout?')) {
+        // Save score before logout
+        if (player.score > 0) {
+          fetch('/update_score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score: player.score })
+          });
+        }
+        localStorage.removeItem('userData');
+        window.location.href = '/logout';
+      }
+    });
 
-    // Auto-focus name input
-    document.getElementById('nameInput').focus();
+    // Auto-save score periodically
+    setInterval(() => {
+      if (gameRunning && player.score > 0) {
+        fetch('/update_score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ score: player.score })
+        }).catch(err => console.log('Score save failed:', err));
+      }
+    }, 30000); // Save every 30 seconds
+
+    // Generate initial food
+    generateFood();
+
+    // Show initial notification
+    setTimeout(() => {
+      showNotification('🎮 Enter your name in the fancy input to start playing!');
+    }, 1000);
   </script> 
 </body>
 </html>
