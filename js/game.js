@@ -1,0 +1,375 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const gameWidth = 10000;
+const gameHeight = 10000;
+
+let player = {
+  x: gameWidth / 2,
+  y: gameHeight / 2,
+  radius: 20,
+  color: 'blue',
+  speed: 5,
+  name: '',
+  score: 0,
+  isPlayer: true
+};
+
+let allPlayers = []; // Will include both human player and AI players
+let playerPieces = [player];
+let food = [];
+let mouseX = canvas.width / 2;
+let mouseY = canvas.height / 2;
+
+let gameRunning = false;
+let gameLoopId = null;
+
+// Set the canvas to fullscreen
+function setCanvasFullscreen() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+setCanvasFullscreen();
+window.addEventListener('resize', setCanvasFullscreen);
+
+// Generate AI players
+function generateAIPlayers() {
+  const aiNames = ['Bot Alpha', 'Bot Beta', 'Bot Gamma', 'Bot Delta', 'Bot Epsilon', 'Bot Zeta', 'Bot Eta', 'Bot Theta'];
+  const colors = ['red', 'green', 'purple', 'orange', 'pink', 'cyan', 'yellow', 'brown'];
+  
+  for (let i = 0; i < 8; i++) {
+    let aiPlayer = {
+      x: Math.random() * (gameWidth - 100) + 50,
+      y: Math.random() * (gameHeight - 100) + 50,
+      radius: Math.random() * 30 + 15,
+      color: colors[i],
+      speed: Math.random() * 3 + 2,
+      name: aiNames[i],
+      score: Math.floor(Math.random() * 100),
+      isPlayer: false,
+      targetX: Math.random() * gameWidth,
+      targetY: Math.random() * gameHeight,
+      lastDirectionChange: 0
+    };
+    allPlayers.push(aiPlayer);
+  }
+}
+
+function drawGrid() {
+  const gridSize = 50;
+  ctx.strokeStyle = '#ddd';
+  ctx.lineWidth = 1;
+
+  // Calculate zoom factor based on the player's size
+  let zoomFactor = Math.max(0.5, Math.min(2, 30 / player.radius));
+
+  for (let x = 0; x <= gameWidth; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, gameHeight);
+    ctx.stroke();
+  }
+
+  for (let y = 0; y <= gameHeight; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(gameWidth, y);
+    ctx.stroke();
+  }
+}
+
+function drawPlayer() {
+  // Draw player pieces
+  playerPieces.forEach(piece => {
+    ctx.beginPath();
+    ctx.arc(piece.x, piece.y, piece.radius, 0, Math.PI * 2);
+    ctx.fillStyle = piece.color;
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.closePath();
+
+    // Draw the player's name
+    if (piece.name) {
+      ctx.fillStyle = 'white';
+      ctx.font = `${Math.max(12, piece.radius / 3)}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 1;
+      ctx.strokeText(piece.name, piece.x, piece.y);
+      ctx.fillText(piece.name, piece.x, piece.y);
+    }
+  });
+}
+
+function drawAIPlayers() {
+  allPlayers.forEach(aiPlayer => {
+    ctx.beginPath();
+    ctx.arc(aiPlayer.x, aiPlayer.y, aiPlayer.radius, 0, Math.PI * 2);
+    ctx.fillStyle = aiPlayer.color;
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.closePath();
+
+    // Draw AI player name
+    ctx.fillStyle = 'white';
+    ctx.font = `${Math.max(10, aiPlayer.radius / 3)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.strokeText(aiPlayer.name, aiPlayer.x, aiPlayer.y);
+    ctx.fillText(aiPlayer.name, aiPlayer.x, aiPlayer.y);
+  });
+}
+
+function drawFood() {
+  food.forEach((item) => {
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+    ctx.fillStyle = item.color;
+    ctx.fill();
+    ctx.closePath();
+  });
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function updateAIPlayers() {
+  allPlayers.forEach(aiPlayer => {
+    // Simple AI movement
+    if (Date.now() - aiPlayer.lastDirectionChange > 2000) {
+      aiPlayer.targetX = Math.random() * gameWidth;
+      aiPlayer.targetY = Math.random() * gameHeight;
+      aiPlayer.lastDirectionChange = Date.now();
+    }
+
+    let dx = aiPlayer.targetX - aiPlayer.x;
+    let dy = aiPlayer.targetY - aiPlayer.y;
+    let distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 10) {
+      let moveX = (dx / distance) * aiPlayer.speed;
+      let moveY = (dy / distance) * aiPlayer.speed;
+      
+      aiPlayer.x = Math.max(aiPlayer.radius, Math.min(aiPlayer.x + moveX, gameWidth - aiPlayer.radius));
+      aiPlayer.y = Math.max(aiPlayer.radius, Math.min(aiPlayer.y + moveY, gameHeight - aiPlayer.radius));
+    }
+
+    // AI eats food
+    food.forEach((item, index) => {
+      let dx = aiPlayer.x - item.x;
+      let dy = aiPlayer.y - item.y;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < aiPlayer.radius + item.radius) {
+        food.splice(index, 1);
+        aiPlayer.radius += item.radius / 10;
+        aiPlayer.score += 1;
+      }
+    });
+  });
+}
+
+function updateLeaderboard() {
+  // Combine player and AI scores
+  let allPlayersData = [];
+  
+  // Add human player
+  if (player.name) {
+    allPlayersData.push({
+      name: player.name,
+      score: player.score,
+      isHuman: true
+    });
+  }
+  
+  // Add AI players
+  allPlayers.forEach(aiPlayer => {
+    allPlayersData.push({
+      name: aiPlayer.name,
+      score: aiPlayer.score,
+      isHuman: false
+    });
+  });
+
+  // Sort by score
+  allPlayersData.sort((a, b) => b.score - a.score);
+
+  // Update leaderboard display
+  const leaderboardContent = document.getElementById('leaderboardContent');
+  leaderboardContent.innerHTML = '';
+
+  allPlayersData.slice(0, 10).forEach((playerData, index) => {
+    const entry = document.createElement('div');
+    entry.className = 'leaderboard-entry';
+    
+    const rank = index + 1;
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+    
+    entry.innerHTML = `
+      <span class="player-name">${medal} ${playerData.name}${playerData.isHuman ? ' (You)' : ''}</span>
+      <span class="player-score">${playerData.score}</span>
+    `;
+    
+    if (playerData.isHuman) {
+      entry.style.backgroundColor = 'rgba(68, 255, 68, 0.2)';
+      entry.style.borderRadius = '3px';
+    }
+    
+    leaderboardContent.appendChild(entry);
+  });
+}
+
+function update() {
+  clearCanvas();
+
+  // Calculate zoom factor based on the player's size
+  let zoomFactor = Math.max(0.5, Math.min(2, 30 / player.radius));
+
+  // Calculate the viewport
+  const viewportWidth = canvas.width / zoomFactor;
+  const viewportHeight = canvas.height / zoomFactor;
+  const viewportX = Math.max(0, Math.min(player.x - viewportWidth / 2, gameWidth - viewportWidth));
+  const viewportY = Math.max(0, Math.min(player.y - viewportHeight / 2, gameHeight - viewportHeight));
+
+  // Translate and scale the context
+  ctx.save();
+  ctx.translate(-viewportX, -viewportY);
+  ctx.scale(zoomFactor, zoomFactor);
+
+  drawGrid();
+  drawFood();
+  drawAIPlayers();
+  drawPlayer();
+
+  ctx.restore();
+
+  // Update game stats
+  document.getElementById('scoreDisplay').textContent = player.score;
+  document.getElementById('massDisplay').textContent = Math.floor(player.radius);
+
+  updateLeaderboard();
+
+  // Check for collision with food (player)
+  food.forEach((item, index) => {
+    playerPieces.forEach(piece => {
+      let dx = piece.x - item.x;
+      let dy = piece.y - item.y;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < piece.radius + item.radius) {
+        food.splice(index, 1);
+        piece.radius += item.radius / 10;
+        player.score += 1;
+      }
+    });
+  });
+
+  // Move player pieces
+  playerPieces.forEach(piece => {
+    let angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
+    let dx = Math.cos(angle) * piece.speed;
+    let dy = Math.sin(angle) * piece.speed;
+
+    piece.x = Math.max(piece.radius, Math.min(piece.x + dx, gameWidth - piece.radius));
+    piece.y = Math.max(piece.radius, Math.min(piece.y + dy, gameHeight - piece.radius));
+  });
+
+  // Update AI players
+  updateAIPlayers();
+}
+
+function generateFood() {
+  if (food.length < 1000) {
+    let foodX = Math.random() * gameWidth;
+    let foodY = Math.random() * gameHeight;
+    let foodRadius = Math.random() * 8 + 3;
+    let foodColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+    food.push({ x: foodX, y: foodY, radius: foodRadius, color: foodColor });
+  }
+}
+
+function splitPlayer() {
+  if (playerPieces.length === 1 && player.radius > 20) {
+    const newRadius = player.radius / 1.5;
+    const originalPiece = playerPieces[0];
+    
+    // Create new piece
+    let angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
+    playerPieces.push({
+      x: originalPiece.x + newRadius * Math.cos(angle),
+      y: originalPiece.y + newRadius * Math.sin(angle),
+      radius: newRadius,
+      color: originalPiece.color,
+      speed: originalPiece.speed,
+      name: originalPiece.name
+    });
+    
+    // Update original piece
+    originalPiece.radius = newRadius;
+  }
+}
+
+function gameLoop() {
+  if (gameRunning) {
+    update();
+    generateFood();
+    gameLoopId = requestAnimationFrame(gameLoop);
+  }
+}
+
+// Event listeners
+canvas.addEventListener('mousemove', function(event) {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = event.clientX - rect.left;
+  mouseY = event.clientY - rect.top;
+});
+
+window.addEventListener('keydown', function(event) {
+  if (event.key === ' ') {
+    event.preventDefault();
+    splitPlayer();
+  }
+});
+
+document.getElementById('startButton').addEventListener('click', function() {
+  const playerName = document.getElementById('nameInput').value;
+  if (playerName.trim()) {
+    player.name = playerName;
+    // Add player to allPlayers list for leaderboard
+    allPlayers.unshift(player);
+  } else {
+    player.name = 'Anonymous';
+    allPlayers.unshift(player);
+  }
+  
+  if (!gameRunning) {
+    generateAIPlayers();
+    gameRunning = true;
+    gameLoop();
+  }
+});
+
+document.getElementById('stopButton').addEventListener('click', function() {
+  if (gameRunning) {
+    gameRunning = false;
+    cancelAnimationFrame(gameLoopId);
+  }
+});
+
+document.getElementById('restartButton').addEventListener('click', function() {
+  window.location.reload();
+});
+
+// Generate initial food
+for (let i = 0; i < 500; i++) {
+  generateFood();
+}
