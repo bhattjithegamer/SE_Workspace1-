@@ -1,184 +1,124 @@
-THIS SHOULD BE A LINTER ERRORfrom flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import secrets
 import os
-from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Change this to a random secret key
+app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///agario.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-def init_db():
-    """Initialize the database with users table"""
-    conn = sqlite3.connect('game_users.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            email TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            high_score INTEGER DEFAULT 0
-        )
-    ''')
-    
-    # Create a default admin user for testing
-    admin_hash = generate_password_hash('admin123')
-    cursor.execute('''
-        INSERT OR IGNORE INTO users (username, password_hash, email, high_score)
-        VALUES (?, ?, ?, ?)
-    ''', ('admin', admin_hash, 'admin@agario.com', 1000))
-    
-    conn.commit()
-    conn.close()
+db = SQLAlchemy(app)
+
+# User model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(120), nullable=False)
+    high_score = db.Column(db.Integer, default=0)
+    games_played = db.Column(db.Integer, default=0)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+# Create tables
+with app.app_context():
+    db.create_all()
 
 @app.route('/')
 def index():
-    """Main page - redirect to login if not authenticated"""
     if 'user_id' in session:
-        return render_template('game.html', username=session.get('username'))
-    return redirect(url_for('login'))
-
-@app.route('/login')
-def login():
-    """Login page"""
+        return redirect(url_for('game'))
     return render_template('login.html')
 
-@app.route('/api/login', methods=['POST'])
-def api_login():
-    """Handle login API request"""
+@app.route('/login', methods=['POST'])
+def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     
-    if not username or not password:
-        return jsonify({'success': False, 'message': 'Username and password required'})
+    user = User.query.filter_by(username=username).first()
     
-    conn = sqlite3.connect('game_users.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('SELECT id, username, password_hash FROM users WHERE username = ?', (username,))
-    user = cursor.fetchone()
-    conn.close()
-    
-    if user and check_password_hash(user[2], password):
-        session['user_id'] = user[0]
-        session['username'] = user[1]
+    if user and user.check_password(password):
+        session['user_id'] = user.id
+        session['username'] = user.username
         return jsonify({
             'success': True, 
-            'message': 'Login successful',
-            'user_id': user[0],
-            'username': user[1]
+            'user_id': user.id,
+            'username': user.username,
+            'high_score': user.high_score,
+            'games_played': user.games_played
         })
     else:
-        return jsonify({'success': False, 'message': 'Invalid username or password'})
+        return jsonify({'success': False, 'message': 'Invalid credentials'})
 
-@app.route('/api/register', methods=['POST'])
-def api_register():
-    """Handle registration API request"""
+@app.route('/register', methods=['POST'])
+def register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    email = data.get('email', '')
     
-    if not username or not password:
-        return jsonify({'success': False, 'message': 'Username and password required'})
-    
-    conn = sqlite3.connect('game_users.db')
-    cursor = conn.cursor()
-    
-    # Check if username already exists
-    cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
-    if cursor.fetchone():
-        conn.close()
+    if User.query.filter_by(username=username).first():
         return jsonify({'success': False, 'message': 'Username already exists'})
     
-    # Create new user
-    password_hash = generate_password_hash(password)
-    try:
-        cursor.execute('''
-            INSERT INTO users (username, password_hash, email)
-            VALUES (?, ?, ?)
-        ''', (username, password_hash, email))
-        conn.commit()
-        user_id = cursor.lastrowid
-        conn.close()
-        
-        session['user_id'] = user_id
-        session['username'] = username
-        
-        return jsonify({
-            'success': True, 
-            'message': 'Registration successful',
-            'user_id': user_id,
-            'username': username
-        })
-    except Exception as e:
-        conn.close()
-        return jsonify({'success': False, 'message': 'Registration failed'})
+    user = User(username=username)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    
+    session['user_id'] = user.id
+    session['username'] = user.username
+    
+    return jsonify({
+        'success': True,
+        'user_id': user.id,
+        'username': user.username,
+        'high_score': 0,
+        'games_played': 0
+    })
 
-@app.route('/api/save_score', methods=['POST'])
-def save_score():
-    """Save user's high score"""
+@app.route('/game')
+def game():
     if 'user_id' not in session:
-        return jsonify({'success': False, 'message': 'Not authenticated'})
+        return redirect(url_for('index'))
+    return render_template('game.html')
+
+@app.route('/update_score', methods=['POST'])
+def update_score():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
     
     data = request.get_json()
     score = data.get('score', 0)
-    user_id = session['user_id']
     
-    conn = sqlite3.connect('game_users.db')
-    cursor = conn.cursor()
+    user = User.query.get(session['user_id'])
+    if user:
+        if score > user.high_score:
+            user.high_score = score
+        user.games_played += 1
+        db.session.commit()
+        
+        return jsonify({'success': True, 'new_high_score': score > (user.high_score - score)})
     
-    # Update high score if current score is higher
-    cursor.execute('''
-        UPDATE users SET high_score = MAX(high_score, ?) 
-        WHERE id = ?
-    ''', (score, user_id))
-    
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True, 'message': 'Score saved'})
+    return jsonify({'success': False, 'message': 'User not found'})
 
 @app.route('/logout')
 def logout():
-    """Logout user"""
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
-@app.route('/api/user_info')
-def user_info():
-    """Get current user information"""
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'message': 'Not authenticated'})
-    
-    conn = sqlite3.connect('game_users.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT id, username, email, high_score, created_at 
-        FROM users WHERE id = ?
-    ''', (session['user_id'],))
-    
-    user = cursor.fetchone()
-    conn.close()
-    
-    if user:
-        return jsonify({
-            'success': True,
-            'user': {
-                'id': user[0],
-                'username': user[1],
-                'email': user[2],
-                'high_score': user[3],
-                'created_at': user[4]
-            }
-        })
-    else:
-        return jsonify({'success': False, 'message': 'User not found'})
+@app.route('/leaderboard')
+def leaderboard():
+    top_players = User.query.order_by(User.high_score.desc()).limit(10).all()
+    return jsonify([{
+        'username': user.username,
+        'high_score': user.high_score,
+        'games_played': user.games_played
+    } for user in top_players])
 
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
